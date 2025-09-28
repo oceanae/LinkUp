@@ -24,8 +24,14 @@ app.add_middleware(
 
 # Serve React static files
 frontend_build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build'))
+print("Serving React build from:", frontend_build_dir)
 if os.path.exists(frontend_build_dir):
-    app.mount("/static", StaticFiles(directory=frontend_build_dir, html=True), name="static")
+    print("Files in build:", os.listdir(frontend_build_dir))
+else:
+    print("Build directory not found!")
+static_dir = os.path.join(frontend_build_dir, "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Catch-all route for React Router (serves index.html for non-API, non-static routes)
 from fastapi import Request
