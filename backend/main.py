@@ -1,5 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 from pydantic import BaseModel
 from typing import List, Optional
 import numpy as np
@@ -8,14 +12,28 @@ import numpy as np
 # Initialize FastAPI app first
 app = FastAPI(title="LinkUp Backend")
 
-# Allow CORS for frontend
+# Allow CORS for frontend, configurable via env var
+allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"] ,
+    allow_methods=["*"],
     allow_headers=["*"]
 )
+
+# Serve React static files
+frontend_build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build'))
+if os.path.exists(frontend_build_dir):
+    app.mount("/", StaticFiles(directory=frontend_build_dir, html=True), name="static")
+
+# Catch-all route for React Router (serves index.html)
+@app.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    index_path = os.path.join(frontend_build_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"error": "index.html not found"}
 
 # --- Fake AI-related LinkedIn profiles ---
 FAKE_PROFILES = [
