@@ -25,11 +25,17 @@ app.add_middleware(
 # Serve React static files
 frontend_build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build'))
 if os.path.exists(frontend_build_dir):
-    app.mount("/", StaticFiles(directory=frontend_build_dir, html=True), name="static")
+    app.mount("/static", StaticFiles(directory=frontend_build_dir, html=True), name="static")
 
-# Catch-all route for React Router (serves index.html)
+# Catch-all route for React Router (serves index.html for non-API, non-static routes)
+from fastapi import Request
+from fastapi import HTTPException
+
 @app.get("/{full_path:path}")
-async def serve_react_app(full_path: str):
+async def serve_react_app(full_path: str, request: Request):
+    # Don't override API or static routes
+    if full_path.startswith("api") or full_path.startswith("recommend") or full_path.startswith("profiles") or full_path.startswith("static"):
+        raise HTTPException(status_code=404)
     index_path = os.path.join(frontend_build_dir, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
