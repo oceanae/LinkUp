@@ -29,7 +29,8 @@ function App() {
       posts: form.posts.split(',').map(s => s.trim()).filter(Boolean)
     };
     try {
-      const res = await fetch('http://127.0.0.1:8000/recommend', {
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+  const res = await fetch(`${apiUrl}/recommend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
